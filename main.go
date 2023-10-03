@@ -59,10 +59,54 @@ func getBookById(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, book)
 }
 
+func checkOutBook(c *gin.Context) {
+	id, ok := c.GetQuery("id")
+
+	if !ok {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "id required !!"})
+		return
+	}
+
+	book, err := bookById(id)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "book not found !!"})
+		return
+	}
+
+	if book.Quantity <= 0 {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "book not avialable !!"})
+		return
+	}
+
+	book.Quantity -= 1
+
+	c.IndentedJSON(http.StatusOK, book)
+}
+
+func returnBook(c *gin.Context) {
+	id, ok := c.GetQuery("id")
+	if !ok {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "id required !!"})
+		return
+	}
+	book, err := bookById(id)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "book not found !!"})
+		return
+	}
+
+	book.Quantity += 1
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "book returned successfully !!"})
+}
+
 func main() {
 	router := gin.Default()
 	router.GET("/books", getBooks)
 	router.POST("/books", createBook)
 	router.GET("/books/:id", getBookById)
+	router.PATCH("/checkout", checkOutBook)
+	router.PATCH("/return", returnBook)
 	router.Run("localhost:8080")
 }
